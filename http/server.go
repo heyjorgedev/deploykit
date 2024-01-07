@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -33,6 +34,10 @@ func NewServer() *Server {
 
 	r.NotFound(s.handleNotFound())
 
+	r.Route("/apps", func(r chi.Router) {
+		r.Get("/", s.handleAppsList())
+	})
+
 	return s
 }
 
@@ -61,8 +66,33 @@ func (s *Server) serveHttp(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
+func (s *Server) respond(w http.ResponseWriter, status int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if data != nil {
+		// TODO: Maybe change to a buffer to avoid partial responses.
+		json.NewEncoder(w).Encode(data)
+	}
+}
+
 func (s *Server) handleNotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("not found"))
+	}
+}
+
+func (s *Server) handleAppsList() http.HandlerFunc {
+	type Response struct {
+		Data []*deploykit.App `json:"data"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		apps, err := s.AppService.FindAll(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		s.respond(w, http.StatusOK, Response{Data: apps})
 	}
 }
