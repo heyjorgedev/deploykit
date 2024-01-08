@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -35,7 +36,8 @@ func NewServer() *Server {
 	r.NotFound(s.handleNotFound())
 
 	r.Route("/apps", func(r chi.Router) {
-		r.Get("/", s.handleAppsList())
+		r.Get("/", s.handleAppsList().ServeHTTP)
+		r.Post("/", s.handleAppsStore().ServeHTTP)
 	})
 
 	return s
@@ -66,13 +68,16 @@ func (s *Server) serveHttp(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
-func (s *Server) respond(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if data != nil {
-		// TODO: Maybe change to a buffer to avoid partial responses.
-		json.NewEncoder(w).Encode(data)
+func (s *Server) respond(w http.ResponseWriter, status int, data interface{}) error {
+	b := bytes.NewBuffer(nil)
+
+	if err := json.NewEncoder(b).Encode(data); err != nil {
+		return err
 	}
+
+	w.WriteHeader(status)
+	w.Write(b.Bytes())
+	return nil
 }
 
 func (s *Server) handleNotFound() http.HandlerFunc {
@@ -81,18 +86,44 @@ func (s *Server) handleNotFound() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleAppsList() http.HandlerFunc {
+func (s *Server) handleAppsList() HandlerFunc {
 	type Response struct {
 		Data []*deploykit.App `json:"data"`
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		apps, err := s.AppService.FindAll(r.Context())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return err
 		}
 
-		s.respond(w, http.StatusOK, Response{Data: apps})
+		return s.respond(w, http.StatusOK, Response{Data: apps})
+	}
+}
+
+func (s *Server) handleAppsStore() HandlerFunc {
+	type Request struct {
+		Name string `json:"name"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) error {
+		var req Request
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return err
+		}
+
+		app := &deploykit.App{
+			Name: req.Name,
+		}
+
+		if err := app.Validate(); err != nil {
+			return err
+		}
+
+		if err := s.AppService.Create(r.Context(), app); err != nil {
+			return err
+		}
+
+		return s.respond(w, http.StatusOK, app)
 	}
 }

@@ -1,11 +1,12 @@
 package deploykit
 
-import "context"
+import (
+	"context"
+)
 
 type App struct {
-	ID      uint16 `json:"id"`
-	Name    string `json:"name"`
-	Network string `json:"network"`
+	ID   uint16 `json:"id"`
+	Name string `json:"name" validate:"required"`
 }
 
 func (a *App) Validate() error {
@@ -14,4 +15,5 @@ func (a *App) Validate() error {
 
 type AppService interface {
 	FindAll(ctx context.Context) ([]*App, error)
+	Create(ctx context.Context, app *App) error
 }
