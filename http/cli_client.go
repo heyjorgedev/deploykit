@@ -51,36 +51,56 @@ func (c *CLIClient) url(path string) (url.URL, error) {
 
 }
 
-func (c *CLIClient) AppsCreate(ctx context.Context, a deploykit.App) (deploykit.App, error) {
+func (c *CLIClient) AppsCreate(ctx context.Context, a deploykit.App) (ResourceResponse[deploykit.App], error) {
 	url, err := c.url("/apps")
 	if err != nil {
-		fmt.Println("a")
-		return a, nil
+		return ResourceResponse[deploykit.App]{}, err
 	}
 
 	b, err := json.Marshal(a)
 	if err != nil {
-		fmt.Println("b")
-		return a, err
+		return ResourceResponse[deploykit.App]{}, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url.String(), bytes.NewBuffer(b))
 	if err != nil {
-		fmt.Println("c")
-		return a, err
+		return ResourceResponse[deploykit.App]{}, err
 	}
 	req = req.WithContext(ctx)
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		fmt.Println("d")
-		return a, err
+		return ResourceResponse[deploykit.App]{}, err
 	}
 	defer resp.Body.Close()
 
-	var app deploykit.App
-	json.NewDecoder(resp.Body).Decode(&app)
+	var rr ResourceResponse[deploykit.App]
+	json.NewDecoder(resp.Body).Decode(&rr)
 
-	return app, nil
+	return rr, nil
+}
+
+func (c *CLIClient) AppsList(ctx context.Context) (ResourceResponse[[]*deploykit.App], error) {
+	url, err := c.url("/apps")
+	if err != nil {
+		return ResourceResponse[[]*deploykit.App]{}, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
+	if err != nil {
+		return ResourceResponse[[]*deploykit.App]{}, err
+	}
+	req = req.WithContext(ctx)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return ResourceResponse[[]*deploykit.App]{}, err
+	}
+	defer resp.Body.Close()
+
+	var rr ResourceResponse[[]*deploykit.App]
+	json.NewDecoder(resp.Body).Decode(&rr)
+
+	return rr, nil
 }

@@ -23,7 +23,8 @@ func (fn HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
-type ResponseWrapper[T any] struct {
-	Data   T                          `json:"data"`
-	Errors deploykit.ValidationErrors `json:"errors"`
+type ResourceResponse[T any] struct {
+	Data    T                          `json:"data"`
+	Message string                     `json:"message"`
+	Errors  deploykit.ValidationErrors `json:"errors"`
 }

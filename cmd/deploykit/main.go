@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/jorgemurta/deploykit"
 	"github.com/jorgemurta/deploykit/http"
@@ -14,8 +16,6 @@ func main() {
 	p := &Program{}
 	if err := p.Run(context.Background()); err != nil {
 		p.Close()
-		fmt.Fprintln(os.Stderr, err)
-		// wtf.ReportError(ctx, err)
 		os.Exit(1)
 	}
 	defer p.Close()
@@ -41,9 +41,10 @@ func (p *Program) Close() error {
 
 func (p *Program) rootCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "deploykit",
-		Short: "Hugo is a very fast static site generator",
-		Long:  `Deploy`,
+		Use:          "deploykit",
+		Short:        "Hugo is a very fast static site generator",
+		Long:         `Deploy`,
+		SilenceUsage: true,
 	}
 }
 
@@ -65,8 +66,23 @@ func (p *Program) appsListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "Say hello",
 		Long:  "Say hello to the world",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Hello, World!")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			resp, err := p.HTTPClient.AppsList(context.Background())
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Apps (%d):\n", len(resp.Data))
+
+			sort.Slice(resp.Data, func(i, j int) bool {
+				return resp.Data[i].Name < resp.Data[j].Name
+			})
+
+			for _, app := range resp.Data {
+				fmt.Printf("- %s\n", app.Name)
+			}
+
+			return nil
 		},
 	}
 }
@@ -77,24 +93,23 @@ func (p *Program) appsCreateCmd() *cobra.Command {
 		Short: "Say hello",
 		Long:  "Say hello to the world",
 		Args:  cobra.MinimumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			appName := args[0]
-			app, err := p.HTTPClient.AppsCreate(context.Background(), deploykit.App{
+			resp, err := p.HTTPClient.AppsCreate(context.Background(), deploykit.App{
 				Name: appName,
 			})
 
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
-			if app.ID == 0 {
-				fmt.Println("App not created")
-				return
+			if resp.Data.ID == 0 {
+				fmt.Println(resp.Data)
+				return errors.New("app not created")
 			}
 
-			fmt.Printf("App created with ID: %d\n", app.ID)
-
+			fmt.Printf("App created with ID: %d\n", resp.Data.ID)
+			return nil
 		},
 	}
 }

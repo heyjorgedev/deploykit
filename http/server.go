@@ -87,7 +87,7 @@ func (s *Server) respond(w http.ResponseWriter, r *http.Request, status int, dat
 }
 
 func (s *Server) responseWithValidationErrors(w http.ResponseWriter, r *http.Request, errs deploykit.ValidationErrors) error {
-	return s.respond(w, r, http.StatusBadRequest, ResponseWrapper[any]{
+	return s.respond(w, r, http.StatusBadRequest, ResourceResponse[any]{
 		Errors: errs,
 	})
 }
@@ -99,17 +99,13 @@ func (s *Server) handleNotFound() http.HandlerFunc {
 }
 
 func (s *Server) handleAppsList() HandlerFunc {
-	type Response struct {
-		Data []*deploykit.App `json:"data"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) error {
 		apps, err := s.AppService.FindAll(r.Context())
 		if err != nil {
 			return err
 		}
 
-		return s.respond(w, r, http.StatusOK, Response{Data: apps})
+		return s.respond(w, r, http.StatusOK, ResourceResponse[[]*deploykit.App]{Data: apps})
 	}
 }
 
@@ -137,6 +133,6 @@ func (s *Server) handleAppsStore() HandlerFunc {
 			return err
 		}
 
-		return s.respond(w, r, http.StatusCreated, app)
+		return s.respond(w, r, http.StatusCreated, ResourceResponse[*deploykit.App]{Data: app})
 	}
 }
