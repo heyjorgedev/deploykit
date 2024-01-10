@@ -18,6 +18,7 @@ const ShutdownTimeout = 1 * time.Second
 type Server struct {
 	ln     net.Listener
 	server *http.Server
+	// http2Server *http2.Server
 	router *chi.Mux
 
 	Addr string
@@ -28,10 +29,14 @@ type Server struct {
 func NewServer() *Server {
 	r := chi.NewRouter()
 	s := &Server{
-		server: &http.Server{},
 		router: r,
 	}
-	s.server.Handler = http.HandlerFunc(s.serveHttp)
+
+	// s.http2Server = &http2.Server{}
+	s.server = &http.Server{
+		//Handler: h2c.NewHandler(http.HandlerFunc(s.serveHttp), s.http2Server),
+		Handler: http.HandlerFunc(s.serveHttp),
+	}
 
 	r.NotFound(s.handleNotFound())
 
@@ -68,16 +73,23 @@ func (s *Server) serveHttp(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
-func (s *Server) respond(w http.ResponseWriter, status int, data interface{}) error {
+func (s *Server) respond(w http.ResponseWriter, r *http.Request, status int, data interface{}) error {
 	b := bytes.NewBuffer(nil)
 
 	if err := json.NewEncoder(b).Encode(data); err != nil {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(b.Bytes())
 	return nil
+}
+
+func (s *Server) responseWithValidationErrors(w http.ResponseWriter, r *http.Request, errs deploykit.ValidationErrors) error {
+	return s.respond(w, r, http.StatusBadRequest, ResponseWrapper[any]{
+		Errors: errs,
+	})
 }
 
 func (s *Server) handleNotFound() http.HandlerFunc {
@@ -97,7 +109,7 @@ func (s *Server) handleAppsList() HandlerFunc {
 			return err
 		}
 
-		return s.respond(w, http.StatusOK, Response{Data: apps})
+		return s.respond(w, r, http.StatusOK, Response{Data: apps})
 	}
 }
 
@@ -116,14 +128,15 @@ func (s *Server) handleAppsStore() HandlerFunc {
 			Name: req.Name,
 		}
 
-		if err := app.Validate(); err != nil {
-			return err
+		err := app.Validate()
+		if err != nil {
+			return s.responseWithValidationErrors(w, r, *err)
 		}
 
 		if err := s.AppService.Create(r.Context(), app); err != nil {
 			return err
 		}
 
-		return s.respond(w, http.StatusOK, app)
+		return s.respond(w, r, http.StatusCreated, app)
 	}
 }

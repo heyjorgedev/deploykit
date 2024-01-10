@@ -9,7 +9,7 @@ type App struct {
 	Name string `json:"name" validate:"required"`
 }
 
-func (a *App) Validate() error {
+func (a *App) Validate() *ValidationErrors {
 	return nil
 }
 

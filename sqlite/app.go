@@ -46,7 +46,7 @@ func (s *AppService) Create(ctx context.Context, app *deploykit.App) error {
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRowContext(ctx, "INSERT INTO apps (name) VALUES (?, ?) RETURNING id, name", app.Name)
+	row := tx.QueryRowContext(ctx, "INSERT INTO apps (name) VALUES (?) RETURNING id, name", app.Name)
 	if row.Err() != nil {
 		return err
 	}

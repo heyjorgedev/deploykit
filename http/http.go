@@ -1,6 +1,10 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/jorgemurta/deploykit"
+)
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
@@ -17,4 +21,9 @@ func (fn HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, err.Error(), http.StatusInternalServerError)
+}
+
+type ResponseWrapper[T any] struct {
+	Data   T                          `json:"data"`
+	Errors deploykit.ValidationErrors `json:"errors"`
 }
