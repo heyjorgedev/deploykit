@@ -41,11 +41,27 @@ func NewServer() *Server {
 	r.NotFound(s.handleNotFound())
 
 	r.Route("/apps", func(r chi.Router) {
-		r.Get("/", s.handleAppsList().ServeHTTP)
-		r.Post("/", s.handleAppsStore().ServeHTTP)
+		r.Get("/", s.handleAppsList())
+		r.Post("/", s.handleAppsStore())
 	})
 
 	return s
+}
+
+func (s *Server) handlerFunc(next HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := next(w, r)
+		if err != nil {
+			s.Error(w, r, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (s *Server) Error(w http.ResponseWriter, r *http.Request, message string, status int) {
+	s.respond(w, r, status, Envelope[any]{
+		Success: false,
+		Message: message,
+	})
 }
 
 func (s *Server) Open() (err error) {
@@ -86,35 +102,32 @@ func (s *Server) respond(w http.ResponseWriter, r *http.Request, status int, dat
 	return nil
 }
 
-func (s *Server) responseWithValidationErrors(w http.ResponseWriter, r *http.Request, errs deploykit.ValidationErrors) error {
-	return s.respond(w, r, http.StatusBadRequest, ResourceResponse[any]{
-		Errors: errs,
-	})
-}
-
 func (s *Server) handleNotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not found"))
+		s.Error(w, r, "not found", http.StatusNotFound)
 	}
 }
 
-func (s *Server) handleAppsList() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleAppsList() http.HandlerFunc {
+	return s.handlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		apps, err := s.AppService.FindAll(r.Context())
 		if err != nil {
 			return err
 		}
 
-		return s.respond(w, r, http.StatusOK, ResourceResponse[[]*deploykit.App]{Data: apps})
-	}
+		return s.respond(w, r, http.StatusOK, Envelope[[]*deploykit.App]{
+			Success: true,
+			Data:    apps,
+		})
+	})
 }
 
-func (s *Server) handleAppsStore() HandlerFunc {
+func (s *Server) handleAppsStore() http.HandlerFunc {
 	type Request struct {
 		Name string `json:"name"`
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return s.handlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		var req Request
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			return err
@@ -126,13 +139,16 @@ func (s *Server) handleAppsStore() HandlerFunc {
 
 		err := app.Validate()
 		if err != nil {
-			return s.responseWithValidationErrors(w, r, *err)
+			return err
 		}
 
 		if err := s.AppService.Create(r.Context(), app); err != nil {
 			return err
 		}
 
-		return s.respond(w, r, http.StatusCreated, ResourceResponse[*deploykit.App]{Data: app})
-	}
+		return s.respond(w, r, http.StatusCreated, Envelope[*deploykit.App]{
+			Success: true,
+			Data:    app,
+		})
+	})
 }
