@@ -52,7 +52,12 @@ func (s *Server) handlerFunc(next HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := next(w, r)
 		if err != nil {
-			s.Error(w, r, err.Error(), http.StatusInternalServerError)
+			switch err.(type) {
+			case *deploykit.Error:
+				s.Error(w, r, deploykit.ErrorMessage(err), http.StatusBadRequest)
+			default:
+				s.Error(w, r, err.Error(), http.StatusInternalServerError)
+			}
 		}
 	}
 }
