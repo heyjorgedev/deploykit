@@ -2,7 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"os/user"
+	"path/filepath"
+	"strings"
 
 	"github.com/jorgemurta/deploykit/http"
 	"github.com/spf13/cobra"
@@ -27,10 +31,12 @@ func (p *Program) Run(ctx context.Context) error {
 	r := p.rootCmd()
 
 	r.AddCommand(p.databaseRedisListCmd())
-	r.AddCommand(p.appsCreateCmd(ctx))
-	r.AddCommand(p.appsListCmd(ctx))
+	r.AddCommand(p.appsCreateCmd())
+	r.AddCommand(p.appsListCmd())
 
-	return r.Execute()
+	r.AddCommand(p.deployCmd())
+
+	return r.ExecuteContext(ctx)
 }
 
 func (p *Program) Close() error {
@@ -44,4 +50,24 @@ func (p *Program) rootCmd() *cobra.Command {
 		Long:         `Deploy`,
 		SilenceUsage: true,
 	}
+}
+
+func expand(path string) (string, error) {
+	// Ignore if path has no leading tilde.
+	if path != "~" && !strings.HasPrefix(path, "~"+string(os.PathSeparator)) {
+		return path, nil
+	}
+
+	// Fetch the current user to determine the home path.
+	u, err := user.Current()
+	if err != nil {
+		return path, err
+	} else if u.HomeDir == "" {
+		return path, fmt.Errorf("home directory unset")
+	}
+
+	if path == "~" {
+		return u.HomeDir, nil
+	}
+	return filepath.Join(u.HomeDir, strings.TrimPrefix(path, "~"+string(os.PathSeparator))), nil
 }

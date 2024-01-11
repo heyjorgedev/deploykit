@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -10,13 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (p *Program) appsListCmd(ctx context.Context) *cobra.Command {
+func (p *Program) appsListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "apps:list",
 		Short: "Say hello",
 		Long:  "Say hello to the world",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := p.HTTPClient.AppsList(ctx)
+			resp, err := p.HTTPClient.AppsList(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -36,7 +35,7 @@ func (p *Program) appsListCmd(ctx context.Context) *cobra.Command {
 	}
 }
 
-func (p *Program) appsCreateCmd(ctx context.Context) *cobra.Command {
+func (p *Program) appsCreateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "apps:create",
 		Short: "Say hello",
@@ -44,7 +43,7 @@ func (p *Program) appsCreateCmd(ctx context.Context) *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			appName := args[0]
-			resp, err := p.HTTPClient.AppsCreate(ctx, deploykit.App{
+			resp, err := p.HTTPClient.AppsCreate(cmd.Context(), deploykit.App{
 				Name: appName,
 			})
 
