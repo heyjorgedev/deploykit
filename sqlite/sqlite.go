@@ -12,6 +12,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/jorgemurta/deploykit"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -184,4 +185,17 @@ func (n *NullTime) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return (*time.Time)(n).UTC().Format(time.RFC3339), nil
+}
+
+func FormatError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch err.Error() {
+	case "UNIQUE constraint failed: apps.name":
+		return deploykit.Errorf(deploykit.ECONFLICT, "There is already an application with this name.")
+	default:
+		return err
+	}
 }

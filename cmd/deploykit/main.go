@@ -103,12 +103,11 @@ func (p *Program) appsCreateCmd() *cobra.Command {
 				return err
 			}
 
-			if resp.Data.ID == 0 {
-				fmt.Println(resp.Data)
-				return errors.New("app not created")
+			if !resp.Success {
+				return errors.New(resp.Message)
 			}
 
-			fmt.Printf("App created with ID: %d\n", resp.Data.ID)
+			fmt.Println(resp.Message)
 			return nil
 		},
 	}

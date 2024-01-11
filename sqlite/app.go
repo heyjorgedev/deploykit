@@ -42,18 +42,18 @@ func (s *AppService) FindAll(ctx context.Context) ([]*deploykit.App, error) {
 func (s *AppService) Create(ctx context.Context, app *deploykit.App) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return FormatError(err)
 	}
 	defer tx.Rollback()
 
 	row := tx.QueryRowContext(ctx, "INSERT INTO apps (name) VALUES (?) RETURNING id, name", app.Name)
 	if row.Err() != nil {
-		return err
+		return FormatError(err)
 	}
 
 	err = row.Scan(&app.ID, &app.Name)
 	if err != nil {
-		return err
+		return FormatError(err)
 	}
 
 	return tx.Commit()

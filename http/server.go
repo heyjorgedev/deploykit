@@ -153,6 +153,7 @@ func (s *Server) handleAppsStore() http.HandlerFunc {
 
 		return s.respond(w, r, http.StatusCreated, Envelope[*deploykit.App]{
 			Success: true,
+			Message: fmt.Sprintf("Application %s created", app.Name),
 			Data:    app,
 		})
 	})

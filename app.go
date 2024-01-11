@@ -11,11 +11,21 @@ type App struct {
 }
 
 func (a *App) Validate() error {
+	err := a.ValidateName()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) ValidateName() error {
 	// name cannot be empty
 	if a.Name == "" {
 		return Errorf(EINVALID, "name cannot be empty")
 	}
 
+	// name cannot have spaces
 	if strings.Contains(a.Name, " ") {
 		return Errorf(EINVALID, "name cannot have spaces")
 	}
@@ -24,7 +34,6 @@ func (a *App) Validate() error {
 	if len(a.Name) > 32 {
 		return Errorf(EINVALID, "name cannot be longer than 32 characters")
 	}
-
 	return nil
 }
 
