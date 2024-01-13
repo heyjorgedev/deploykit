@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	dockerclient "github.com/docker/docker/client"
 	"github.com/jorgemurta/deploykit/http"
 	"github.com/jorgemurta/deploykit/sqlite"
 	"github.com/pelletier/go-toml"
@@ -55,6 +56,7 @@ type Program struct {
 	ConfigPath string
 
 	DB         *sqlite.DB
+	Docker     *dockerclient.Client
 	HTTPServer *http.Server
 }
 
@@ -76,6 +78,11 @@ func (p *Program) Run(ctx context.Context) (err error) {
 	}
 	if err := p.DB.Open(); err != nil {
 		return fmt.Errorf("cannot open db: %w", err)
+	}
+
+	p.Docker, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
+	if err != nil {
+		return err
 	}
 
 	// Setup Services
@@ -103,6 +110,11 @@ func (p *Program) Close() error {
 	}
 	if p.DB != nil {
 		if err := p.DB.Close(); err != nil {
+			return err
+		}
+	}
+	if p.Docker != nil {
+		if err := p.Docker.Close(); err != nil {
 			return err
 		}
 	}
