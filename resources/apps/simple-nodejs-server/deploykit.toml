@@ -1,2 +1,6 @@
-[app]
-    name = "hello-world"
+
+app = "hello-world"
+
+[deploy]
+  release_command = "bin/rails db:prepare"
+
