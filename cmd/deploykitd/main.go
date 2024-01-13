@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	dockerclient "github.com/docker/docker/client"
+	"github.com/jorgemurta/deploykit/docker"
 	"github.com/jorgemurta/deploykit/http"
 	"github.com/jorgemurta/deploykit/sqlite"
 	"github.com/pelletier/go-toml"
@@ -56,7 +56,7 @@ type Program struct {
 	ConfigPath string
 
 	DB         *sqlite.DB
-	Docker     *dockerclient.Client
+	Docker     *docker.Connection
 	HTTPServer *http.Server
 }
 
@@ -65,6 +65,7 @@ func NewProgram() *Program {
 		Config:     DefaultConfig(),
 		ConfigPath: DefaultConfigPath,
 
+		Docker:     docker.NewConnection(),
 		DB:         sqlite.NewDB(""),
 		HTTPServer: http.NewServer(),
 	}
@@ -78,18 +79,20 @@ func (p *Program) Run(ctx context.Context) (err error) {
 	if err := p.DB.Open(); err != nil {
 		return fmt.Errorf("cannot open db: %w", err)
 	}
-	if p.Docker, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation()); err != nil {
+	if err := p.Docker.Open(); err != nil {
 		return fmt.Errorf("cannot connect to docker: %w", err)
 	}
 
 	// Setup Services
 	appService := sqlite.NewAppService(p.DB)
+	networkService := sqlite.NewNetworkService(p.DB)
 
 	// Setup HTTP Server Configurations
 	p.HTTPServer.Addr = p.Config.HTTP.Addr
 
 	// Setup HTTP Server Dependencies
 	p.HTTPServer.AppService = appService
+	p.HTTPServer.NetworkService = networkService
 
 	// Start the HTTP server.
 	if err := p.HTTPServer.Open(); err != nil {

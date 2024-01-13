@@ -21,7 +21,7 @@ func (s *AppService) FindAll(ctx context.Context) ([]*deploykit.App, error) {
 	}
 	defer tx.Rollback()
 
-	rows, err := tx.QueryContext(ctx, "SELECT id, name FROM apps")
+	rows, err := tx.QueryContext(ctx, "SELECT name FROM apps")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (s *AppService) FindAll(ctx context.Context) ([]*deploykit.App, error) {
 	apps := make([]*deploykit.App, 0)
 	for rows.Next() {
 		var app deploykit.App
-		if err := rows.Scan(&app.ID, &app.Name); err != nil {
+		if err := rows.Scan(&app.Name); err != nil {
 			return nil, err
 		}
 		apps = append(apps, &app)
@@ -46,14 +46,8 @@ func (s *AppService) Create(ctx context.Context, app *deploykit.App) error {
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRowContext(ctx, "INSERT INTO apps (name) VALUES (?) RETURNING id, name", app.Name)
-	if row.Err() != nil {
-		return FormatError(err)
-	}
-
-	err = row.Scan(&app.ID, &app.Name)
-	if err != nil {
-		return FormatError(err)
+	if err := createApp(ctx, tx, app); err != nil {
+		return err
 	}
 
 	return tx.Commit()

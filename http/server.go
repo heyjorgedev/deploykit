@@ -23,7 +23,8 @@ type Server struct {
 
 	Addr string
 
-	AppService deploykit.AppService
+	AppService     deploykit.AppService
+	NetworkService deploykit.NetworkService
 }
 
 func NewServer() *Server {
@@ -43,6 +44,10 @@ func NewServer() *Server {
 	r.Route("/apps", func(r chi.Router) {
 		r.Get("/", s.handleAppsList())
 		r.Post("/", s.handleAppsStore())
+	})
+
+	r.Route("/networks", func(r chi.Router) {
+		r.Get("/", s.handleNetworksList())
 	})
 
 	return s
@@ -155,6 +160,20 @@ func (s *Server) handleAppsStore() http.HandlerFunc {
 			Success: true,
 			Message: fmt.Sprintf("Application %s created", app.Name),
 			Data:    app,
+		})
+	})
+}
+
+func (s *Server) handleNetworksList() http.HandlerFunc {
+	return s.handlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		networks, err := s.NetworkService.FindAll(r.Context())
+		if err != nil {
+			return err
+		}
+
+		return s.respond(w, r, http.StatusOK, Envelope[[]*deploykit.Network]{
+			Success: true,
+			Data:    networks,
 		})
 	})
 }
