@@ -72,17 +72,14 @@ func NewProgram() *Program {
 
 func (p *Program) Run(ctx context.Context) (err error) {
 
-	// Open the database.
 	if p.DB.DSN, err = expandDSN(p.Config.DB.DSN); err != nil {
 		return fmt.Errorf("cannot expand dsn: %w", err)
 	}
 	if err := p.DB.Open(); err != nil {
 		return fmt.Errorf("cannot open db: %w", err)
 	}
-
-	p.Docker, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
-	if err != nil {
-		return err
+	if p.Docker, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation()); err != nil {
+		return fmt.Errorf("cannot connect to docker: %w", err)
 	}
 
 	// Setup Services
