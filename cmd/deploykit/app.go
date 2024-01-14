@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/jorgemurta/deploykit"
+	"github.com/heyjorgedev/deploykit"
 	"github.com/spf13/cobra"
 )
 

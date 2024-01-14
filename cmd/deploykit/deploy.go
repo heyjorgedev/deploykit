@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jorgemurta/deploykit"
+	"github.com/heyjorgedev/deploykit"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )

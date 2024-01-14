@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jorgemurta/deploykit"
+	"github.com/heyjorgedev/deploykit"
 )
 
 const ShutdownTimeout = 1 * time.Second

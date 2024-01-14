@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jorgemurta/deploykit/http"
+	"github.com/heyjorgedev/deploykit/http"
 	"github.com/spf13/cobra"
 )
 

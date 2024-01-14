@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/jorgemurta/deploykit"
+	"github.com/heyjorgedev/deploykit"
 )
 
 type CLIClient struct {

@@ -3,7 +3,7 @@ package sqlite
 import (
 	"context"
 
-	"github.com/jorgemurta/deploykit"
+	"github.com/heyjorgedev/deploykit"
 )
 
 type NetworkService struct {

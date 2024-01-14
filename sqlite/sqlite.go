@@ -12,7 +12,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/jorgemurta/deploykit"
+	"github.com/heyjorgedev/deploykit"
 	_ "github.com/mattn/go-sqlite3"
 )
 

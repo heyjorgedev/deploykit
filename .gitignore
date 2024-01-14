@@ -2,3 +2,4 @@ tmp/
 target/
 .DS_Store
 cmd/hack/
+.idea/

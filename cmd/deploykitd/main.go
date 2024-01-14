@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jorgemurta/deploykit/docker"
-	"github.com/jorgemurta/deploykit/http"
-	"github.com/jorgemurta/deploykit/sqlite"
+	"github.com/heyjorgedev/deploykit/docker"
+	"github.com/heyjorgedev/deploykit/http"
+	"github.com/heyjorgedev/deploykit/sqlite"
 	"github.com/pelletier/go-toml"
 )
 
