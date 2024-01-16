@@ -1,4 +1,0 @@
-[db]
-    dsn = "./tmp/data/db.sqlite"
-[http]
-    addr = "127.0.0.1:8080"

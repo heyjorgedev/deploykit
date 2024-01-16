@@ -1,8 +1,10 @@
-CREATE TABLE apps (
-	name	TEXT NOT NULL PRIMARY KEY
+CREATE TABLE projects (
+    id      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	name	TEXT NOT NULL
 );
 
 CREATE TABLE networks (
-	name				TEXT NOT NULL PRIMARY KEY,
+    id                  INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	name				TEXT NOT NULL,
 	internal_network_id	TEXT NOT NULL
 );

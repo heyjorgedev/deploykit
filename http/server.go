@@ -23,8 +23,7 @@ type Server struct {
 
 	Addr string
 
-	AppService     deploykit.AppService
-	NetworkService deploykit.NetworkService
+	ProjectService *deploykit.ProjectService
 }
 
 func NewServer() *Server {
@@ -40,15 +39,6 @@ func NewServer() *Server {
 	}
 
 	r.NotFound(s.handleNotFound())
-
-	r.Route("/apps", func(r chi.Router) {
-		r.Get("/", s.handleAppsList())
-		r.Post("/", s.handleAppsStore())
-	})
-
-	r.Route("/networks", func(r chi.Router) {
-		r.Get("/", s.handleNetworksList())
-	})
 
 	return s
 }
@@ -116,64 +106,4 @@ func (s *Server) handleNotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Error(w, r, "not found", http.StatusNotFound)
 	}
-}
-
-func (s *Server) handleAppsList() http.HandlerFunc {
-	return s.handlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-		apps, err := s.AppService.FindAll(r.Context())
-		if err != nil {
-			return err
-		}
-
-		return s.respond(w, r, http.StatusOK, Envelope[[]*deploykit.App]{
-			Success: true,
-			Data:    apps,
-		})
-	})
-}
-
-func (s *Server) handleAppsStore() http.HandlerFunc {
-	type Request struct {
-		Name string `json:"name"`
-	}
-
-	return s.handlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-		var req Request
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			return err
-		}
-
-		app := &deploykit.App{
-			Name: req.Name,
-		}
-
-		err := app.Validate()
-		if err != nil {
-			return err
-		}
-
-		if err := s.AppService.Create(r.Context(), app); err != nil {
-			return err
-		}
-
-		return s.respond(w, r, http.StatusCreated, Envelope[*deploykit.App]{
-			Success: true,
-			Message: fmt.Sprintf("Application %s created", app.Name),
-			Data:    app,
-		})
-	})
-}
-
-func (s *Server) handleNetworksList() http.HandlerFunc {
-	return s.handlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-		networks, err := s.NetworkService.FindAll(r.Context())
-		if err != nil {
-			return err
-		}
-
-		return s.respond(w, r, http.StatusOK, Envelope[[]*deploykit.Network]{
-			Success: true,
-			Data:    networks,
-		})
-	})
 }

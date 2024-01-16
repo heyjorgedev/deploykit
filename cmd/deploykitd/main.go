@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/heyjorgedev/deploykit"
 	"os"
 	"os/signal"
 	"os/user"
@@ -84,15 +85,13 @@ func (p *Program) Run(ctx context.Context) (err error) {
 	}
 
 	// Setup Services
-	appService := sqlite.NewAppService(p.DB)
-	networkService := sqlite.NewNetworkService(p.DB)
+	projectService := &deploykit.ProjectService{}
 
 	// Setup HTTP Server Configurations
-	p.HTTPServer.Addr = p.Config.HTTP.Addr
+	p.HTTPServer.Addr = p.Config.HTTP.ListenAddr
 
 	// Setup HTTP Server Dependencies
-	p.HTTPServer.AppService = appService
-	p.HTTPServer.NetworkService = networkService
+	p.HTTPServer.ProjectService = projectService
 
 	// Start the HTTP server.
 	if err := p.HTTPServer.Open(); err != nil {
@@ -148,20 +147,28 @@ func (p *Program) ParseFlags(ctx context.Context, args []string) error {
 const (
 	DefaultConfigPath = "~/deploykitd.conf"
 	DefaultDSN        = "~/.deploykitd/db"
+	DefaultDataDir    = "~/.deploykitd/"
 )
 
 type Config struct {
 	HTTP struct {
-		Addr string `toml:"addr"`
+		ListenAddr string `toml:"listen_addr"`
 	} `toml:"http"`
 	DB struct {
 		DSN string `toml:"dsn"`
 	} `toml:"db"`
+	DeployKit struct {
+		DataDir string `toml:"data_dir"`
+	} `toml:"deploykit"`
+	SSL struct {
+		IssuerEmail string `toml:"issuer_email"`
+	} `toml:"ssl"`
 }
 
 func DefaultConfig() Config {
 	var config Config
 	config.DB.DSN = DefaultDSN
+	config.DeployKit.DataDir = DefaultDataDir
 	return config
 }
 

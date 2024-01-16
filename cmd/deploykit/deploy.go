@@ -45,7 +45,7 @@ func (p *Program) deployCmd() *cobra.Command {
 		},
 	}
 
-	c.Flags().StringVarP(&configPath, "file", "f", "./deploykit.toml", "Deployment config file")
+	c.Flags().StringVarP(&configPath, "file", "f", "./deploykitd.toml", "Deployment config file")
 
 	return c
 }

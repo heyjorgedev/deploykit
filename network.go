@@ -1,12 +1,10 @@
 package deploykit
 
-import "context"
-
 type Network struct {
+	ID                uint16 `json:"id"`
 	Name              string `json:"name"`
 	InternalNetworkId string `json:"-"`
 }
 
-type NetworkService interface {
-	FindAll(ctx context.Context) ([]*Network, error)
+type NetworkEntityManager interface {
 }

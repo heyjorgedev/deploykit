@@ -1,7 +1,0 @@
-[context]
-    current = "default"
-
-[[contexts]]
-    name = "default"
-    token = ""
-    url = "http://"

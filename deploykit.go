@@ -25,22 +25,26 @@ func (e *Error) Error() string {
 
 func ErrorCode(err error) string {
 	var e *Error
-	if err == nil {
+	switch {
+	case err == nil:
 		return ""
-	} else if errors.As(err, &e) {
+	case errors.As(err, &e):
 		return e.Code
+	default:
+		return EINTERNAL
 	}
-	return EINTERNAL
 }
 
 func ErrorMessage(err error) string {
 	var e *Error
-	if err == nil {
+	switch {
+	case err == nil:
 		return ""
-	} else if errors.As(err, &e) {
+	case errors.As(err, &e):
 		return e.Message
+	default:
+		return "Internal error."
 	}
-	return "Internal error."
 }
 
 func Errorf(code string, format string, args ...interface{}) *Error {
@@ -48,4 +52,10 @@ func Errorf(code string, format string, args ...interface{}) *Error {
 		Code:    code,
 		Message: fmt.Sprintf(format, args...),
 	}
+}
+
+type DeploymentConfig struct {
+	App struct {
+		Name string `toml:"name"`
+	} `toml:"app"`
 }
