@@ -12,7 +12,7 @@ tmp_dir = "tmp"
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = "LISTEN_ADDR=127.0.0.1:9090 ./tmp/deploykitd --config=./configs/deploykitd.toml"
+  full_bin = "LISTEN_ADDR=127.0.0.1:9090 ./tmp/deploykitd --config=./cmd/deploykitd/config/deploykitd.toml"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []
