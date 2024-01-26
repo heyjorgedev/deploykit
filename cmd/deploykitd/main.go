@@ -4,12 +4,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/alexedwards/scs/sqlite3store"
+	"github.com/alexedwards/scs/v2"
 	"github.com/heyjorgedev/deploykit"
 	"os"
 	"os/signal"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/heyjorgedev/deploykit/docker"
 	"github.com/heyjorgedev/deploykit/http"
@@ -92,6 +95,16 @@ func (p *Program) Run(ctx context.Context) (err error) {
 
 	// Setup HTTP Server Dependencies
 	p.HTTPServer.ProjectService = projectService
+
+	// Setup HTTP Sessions
+	sessionManager := scs.New()
+	sessionManager.Cookie.Name = "deploykit_session"
+	sqliteSessionStore := sqlite3store.NewWithCleanupInterval(p.DB.DB, 30*time.Minute)
+	defer sqliteSessionStore.StopCleanup()
+	sessionManager.Store = sqliteSessionStore
+	p.HTTPServer.SessionManager = sessionManager
+
+	// TODO: Implement CSRF
 
 	// Start the HTTP server.
 	if err := p.HTTPServer.Open(); err != nil {

@@ -20,7 +20,7 @@ import (
 var migrationFS embed.FS
 
 type DB struct {
-	db     *sql.DB
+	*sql.DB
 	ctx    context.Context // background context
 	cancel func()          // cancel background context
 
@@ -52,13 +52,13 @@ func (db *DB) Open() (err error) {
 	}
 
 	// Connect to the database.
-	if db.db, err = sql.Open("sqlite3", db.DSN); err != nil {
+	if db.DB, err = sql.Open("sqlite3", db.DSN); err != nil {
 		return err
 	}
 
 	// Enable WAL. SQLite performs better with the WAL  because it allows
 	// multiple readers to operate while data is being written.
-	if _, err := db.db.Exec(`PRAGMA journal_mode = wal;`); err != nil {
+	if _, err := db.DB.Exec(`PRAGMA journal_mode = wal;`); err != nil {
 		return fmt.Errorf("enable wal: %w", err)
 	}
 
@@ -66,7 +66,7 @@ func (db *DB) Open() (err error) {
 	// foreign key constraints by default... which is kinda insane. There's some
 	// overhead on inserts to verify foreign key integrity but it's definitely
 	// worth it.
-	if _, err := db.db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+	if _, err := db.DB.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
 		return fmt.Errorf("foreign keys pragma: %w", err)
 	}
 
@@ -80,8 +80,8 @@ func (db *DB) Open() (err error) {
 func (db *DB) Close() error {
 	db.cancel()
 
-	if db.db != nil {
-		return db.db.Close()
+	if db.DB != nil {
+		return db.DB.Close()
 	}
 
 	return nil
@@ -89,7 +89,7 @@ func (db *DB) Close() error {
 
 func (db *DB) migrate() error {
 	// Ensure the 'migrations' table exists so we don't duplicate migrations.
-	if _, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS migrations (name TEXT PRIMARY KEY);`); err != nil {
+	if _, err := db.DB.Exec(`CREATE TABLE IF NOT EXISTS migrations (name TEXT PRIMARY KEY);`); err != nil {
 		return fmt.Errorf("cannot create migrations table: %w", err)
 	}
 
@@ -113,7 +113,7 @@ func (db *DB) migrate() error {
 // migrate runs a single migration file within a transaction. On success, the
 // migration file name is saved to the "migrations" table to prevent re-running.
 func (db *DB) migrateFile(name string) error {
-	tx, err := db.db.Begin()
+	tx, err := db.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (db *DB) migrateFile(name string) error {
 }
 
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
-	tx, err := db.db.BeginTx(ctx, opts)
+	tx, err := db.DB.BeginTx(ctx, opts)
 	if err != nil {
 		return nil, err
 	}

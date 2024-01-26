@@ -59,3 +59,15 @@ type DeploymentConfig struct {
 		Name string `toml:"name"`
 	} `toml:"app"`
 }
+
+type NetworkRepository interface {
+	Create(name string)
+}
+
+type NetworkService struct {
+	repo NetworkRepository
+}
+
+func (s *NetworkService) Create(name string) {
+	s.repo.Create(name)
+}
