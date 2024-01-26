@@ -7,6 +7,8 @@ import (
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/heyjorgedev/deploykit"
+	"github.com/heyjorgedev/deploykit/mock"
+	"github.com/heyjorgedev/deploykit/security"
 	"os"
 	"os/signal"
 	"os/user"
@@ -89,12 +91,26 @@ func (p *Program) Run(ctx context.Context) (err error) {
 
 	// Setup Services
 	projectService := &deploykit.ProjectService{}
+	userService := &mock.UserService{
+		FindByUsernameFunc: func(username string) (*deploykit.User, error) {
+			return &deploykit.User{
+				ID:       100,
+				Name:     "User",
+				Username: "example",
+				// password
+				Password: "$2a$10$P58UnXr5fBlvLDtUQ9NQNe3GODFzC/Mf/APTM1kUykpPbM43xNDfG",
+			}, nil
+		},
+	}
+	authService := security.NewAuthService(userService)
 
 	// Setup HTTP Server Configurations
 	p.HTTPServer.Addr = p.Config.HTTP.ListenAddr
 
 	// Setup HTTP Server Dependencies
 	p.HTTPServer.ProjectService = projectService
+	p.HTTPServer.AuthService = authService
+	p.HTTPServer.UserService = userService
 
 	// Setup HTTP Sessions
 	sessionManager := scs.New()

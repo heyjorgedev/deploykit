@@ -25,6 +25,8 @@ type Server struct {
 	Addr string
 
 	ProjectService *deploykit.ProjectService
+	AuthService    deploykit.AuthService
+	UserService    deploykit.UserService
 }
 
 func NewServer() *Server {
@@ -39,8 +41,6 @@ func NewServer() *Server {
 		Handler: http.HandlerFunc(s.serveHttp),
 	}
 
-	s.registerRoutes()
-
 	return s
 }
 
@@ -54,6 +54,7 @@ func (s *Server) Open() (err error) {
 		return err
 	}
 
+	s.registerRoutes()
 	go s.server.Serve(s.ln)
 
 	return nil
@@ -66,5 +67,5 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) serveHttp(w http.ResponseWriter, r *http.Request) {
-	s.SessionManager.LoadAndSave(s.router).ServeHTTP(w, r)
+	s.router.ServeHTTP(w, r)
 }
