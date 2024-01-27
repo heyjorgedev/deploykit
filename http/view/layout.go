@@ -36,6 +36,20 @@ func LayoutGuest(p LayoutGuestProps) g.Node {
 	))
 }
 
+type NavBarMenuItemProps struct {
+	Content g.Node
+	Href    string
+	Active  bool
+}
+
+func NavBarMenuItem(p NavBarMenuItemProps) g.Node {
+	return A(
+		Class("border-transparent text-gray-500 hover:border-rose-600 hover:text-rose-600 inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"),
+		Href(p.Href),
+		p.Content,
+	)
+}
+
 type LayoutAuthProps struct {
 	Title   string
 	Content g.Node
@@ -64,9 +78,9 @@ func LayoutAuth(p LayoutAuthProps) g.Node {
 									Span(Class("text-lg font-bold text-gray-900"), g.Text("DeployKit")),
 								),
 								Div(Class("hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8"), htmx.Boost("true"),
-									A(Href("/dashboard"), Class("border-transparent text-gray-500 hover:border-rose-600 hover:text-rose-600 inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"), g.Text("Dashboard")),
-									A(Href("/dashboard"), Class("border-transparent text-gray-500 hover:border-rose-600 hover:text-rose-600 inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"), g.Text("Sites")),
-									A(Href("/dashboard"), Class("border-transparent text-gray-500 hover:border-rose-600 hover:text-rose-600 inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"), g.Text("Databases")),
+									NavBarMenuItem(NavBarMenuItemProps{Href: "/dashboard", Content: g.Text("Dashboard")}),
+									NavBarMenuItem(NavBarMenuItemProps{Href: "/sites", Content: g.Text("Sites")}),
+									NavBarMenuItem(NavBarMenuItemProps{Href: "/databases", Content: g.Text("Databases")}),
 								),
 							),
 							Div(Class("hidden sm:ml-6 sm:flex sm:items-center"),
