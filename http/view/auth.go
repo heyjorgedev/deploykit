@@ -31,7 +31,7 @@ func AuthLoginForm(p AuthLoginFormProps) g.Node {
 				ID:   "password",
 			}),
 		),
-		Div(
+		Div(Class("pt-4"),
 			UIButton(UIButtonProps{
 				Type: "submit",
 				Content: g.Group([]g.Node{
