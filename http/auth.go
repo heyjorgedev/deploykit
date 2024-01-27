@@ -59,10 +59,21 @@ func (s *Server) handlerAuthPostLogin() http.HandlerFunc {
 		password := r.Form.Get("password")
 		user, err := s.AuthService.AttemptCredentials(username, password)
 		if err != nil {
-			view.AuthLoginForm(view.AuthLoginFormProps{
+			formView := view.AuthLoginForm(view.AuthLoginFormProps{
 				Error:    "The credentials you provided are incorrect.",
 				Username: username,
+			})
+
+			if IsHTMX(r) {
+				_ = formView.Render(w)
+				return
+			}
+
+			_ = view.LayoutGuest(view.LayoutGuestProps{
+				Title:   "Login",
+				Content: formView,
 			}).Render(w)
+
 			return
 		}
 
