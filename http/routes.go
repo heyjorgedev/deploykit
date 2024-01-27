@@ -2,15 +2,18 @@ package http
 
 import (
 	"fmt"
+	"github.com/benbjohnson/hashfs"
 	"github.com/go-chi/chi/v5"
-	"github.com/heyjorgedev/deploykit/http/view"
+	"github.com/heyjorgedev/deploykit/http/assets"
 	"net/http"
 )
 
 func (s *Server) registerRoutes() {
 	s.router.Use(s.SessionManager.LoadAndSave)
+	s.router.Handle("/assets/*", http.StripPrefix("/assets/", hashfs.FileServer(assets.FS)))
+
 	s.router.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		_ = view.NotFoundPage().Render(w)
+		Error(w, http.StatusNotFound)
 	})
 
 	// Homepage redirects to auth login if the user is not authenticated

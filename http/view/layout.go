@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/heyjorgedev/deploykit/http/assets"
 	g "github.com/maragudk/gomponents"
 	. "github.com/maragudk/gomponents/html"
 )
@@ -16,13 +17,9 @@ func LayoutGuest(p LayoutGuestProps) g.Node {
 			g.If(p.Title != "", TitleEl(g.Textf("DeployKit - %s", p.Title))),
 			g.If(p.Title == "", TitleEl(g.Text("DeployKit"))),
 			Script(Src("https://cdn.tailwindcss.com?plugins=forms")),
-			Script(
-				Src("https://unpkg.com/htmx.org@1.9.10"),
-				g.Attr("crossorigin", "anonymous"),
-				g.Attr("integrity", "sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"),
-			),
-			Script(Src("https://unpkg.com/htmx.org/dist/ext/loading-states.js")),
-			Script(Src("https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"), Defer()),
+			Script(Src(assets.HttpPath("js/htmx@1-9-10.js"))),
+			Script(Src(assets.HttpPath("js/htmx@ext-loading-states.js"))),
+			Script(Src(assets.HttpPath("js/alpine@3-13-5.js")), Defer()),
 		),
 		Body(Class("h-full antialised bg-gray-50 text-gray-950 flex items-center flex-grow"),
 			Div(Class("w-full sm:max-w-lg mx-auto bg-white px-12 py-12 shadow-sm ring-1 ring-gray-950/5 sm:rounded-xl"),
