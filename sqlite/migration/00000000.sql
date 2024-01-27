@@ -8,7 +8,13 @@ CREATE INDEX sessions_expiry_idx ON sessions(expiry);
 
 CREATE TABLE users (
   id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
   username TEXT NOT NULL,
-  password TEXT NOT NULL,
-  email TEXT NOT NULL
+  password TEXT NOT NULL
+);
+
+
+CREATE TABLE storage_redis (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
 );

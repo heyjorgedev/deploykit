@@ -84,6 +84,6 @@ func (s *Server) handlerAuthPostLogin() http.HandlerFunc {
 		}
 
 		s.SessionManager.Put(r.Context(), "userID", user.ID)
-		Redirect(w, r, "/auth/mock", http.StatusSeeOther)
+		Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	}
 }

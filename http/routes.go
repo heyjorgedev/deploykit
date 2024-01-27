@@ -33,4 +33,9 @@ func (s *Server) registerRoutes() {
 			})
 		})
 	})
+
+	s.router.Route("/", func(r chi.Router) {
+		r.Use(s.middlewareAuth)
+		r.Get("/dashboard", s.handleDashboard())
+	})
 }
