@@ -5,6 +5,17 @@ import (
 	"net/http"
 )
 
+func (s *Server) middlewareAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !s.SessionManager.Exists(r.Context(), "userID") {
+			http.Redirect(w, r, "/auth/login", http.StatusFound)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *Server) handlerAuthGetLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_ = view.LayoutGuest(view.LayoutGuestProps{

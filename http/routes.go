@@ -25,9 +25,12 @@ func (s *Server) registerRoutes() {
 	s.router.Route("/auth", func(r chi.Router) {
 		r.Get("/login", s.handlerAuthGetLogin())
 		r.Post("/login", s.handlerAuthPostLogin())
-		r.Get("/mock", func(w http.ResponseWriter, r *http.Request) {
-			v := s.SessionManager.GetInt(r.Context(), "userID")
-			w.Write([]byte(fmt.Sprintf("Hello from mock! User ID: %d", v)))
+		r.Route("/mock", func(r chi.Router) {
+			r.Use(s.middlewareAuth)
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				v := s.SessionManager.GetInt(r.Context(), "userID")
+				w.Write([]byte(fmt.Sprintf("Hello from mock! User ID: %d", v)))
+			})
 		})
 	})
 }
