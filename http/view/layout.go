@@ -16,6 +16,8 @@ func LayoutGuest(p LayoutGuestProps) g.Node {
 		Head(
 			g.If(p.Title != "", TitleEl(g.Textf("DeployKit - %s", p.Title))),
 			g.If(p.Title == "", TitleEl(g.Text("DeployKit"))),
+			Meta(Charset("utf-8")),
+			Meta(Name("viewport"), Content("width=device-width, initial-scale=1")),
 			Script(Src("https://cdn.tailwindcss.com?plugins=forms")),
 			Script(Src(assets.HttpPath("js/htmx@1-9-10.js"))),
 			Script(Src(assets.HttpPath("js/htmx@ext-loading-states.js"))),
