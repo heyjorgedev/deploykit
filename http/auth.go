@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/heyjorgedev/deploykit/http/view"
 	"net/http"
-	"time"
 )
 
 func (s *Server) handlerAuthGetLogin() http.HandlerFunc {
@@ -17,7 +16,6 @@ func (s *Server) handlerAuthGetLogin() http.HandlerFunc {
 
 func (s *Server) handlerAuthPostLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(2 * time.Second)
 		err := r.ParseForm()
 		if err != nil {
 			Error(w, http.StatusBadRequest)
@@ -29,7 +27,7 @@ func (s *Server) handlerAuthPostLogin() http.HandlerFunc {
 		user, err := s.AuthService.AttemptCredentials(username, password)
 		if err != nil {
 			view.AuthLoginForm(view.AuthLoginFormProps{
-				Error:    "Unable to validate your credentials",
+				Error:    "The credentials you provided are incorrect.",
 				Username: username,
 			}).Render(w)
 			return
