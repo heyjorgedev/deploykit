@@ -28,8 +28,8 @@ func (s *Server) registerRoutes() {
 		r.Route("/mock", func(r chi.Router) {
 			r.Use(s.middlewareAuth)
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				v := s.SessionManager.GetInt(r.Context(), "userID")
-				w.Write([]byte(fmt.Sprintf("Hello from mock! User ID: %d", v)))
+				v, _ := s.currentAuthenticatedUser(r.Context())
+				w.Write([]byte(fmt.Sprintf("Hello from mock! User ID: %d, my name is %s and my username is %s", v.ID, v.Name, v.Username)))
 			})
 		})
 	})

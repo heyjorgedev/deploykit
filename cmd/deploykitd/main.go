@@ -101,6 +101,13 @@ func (p *Program) Run(ctx context.Context) (err error) {
 				Password: "$2a$10$P58UnXr5fBlvLDtUQ9NQNe3GODFzC/Mf/APTM1kUykpPbM43xNDfG",
 			}, nil
 		},
+		FindByIdFunc: func(id int) (*deploykit.User, error) {
+			return &deploykit.User{
+				ID:       100,
+				Name:     "User",
+				Username: "example",
+			}, nil
+		},
 	}
 	authService := security.NewAuthService(userService)
 
