@@ -93,6 +93,10 @@ func (p *Program) Run(ctx context.Context) (err error) {
 	projectService := &deploykit.ProjectService{}
 	userService := &mock.UserService{
 		FindByUsernameFunc: func(username string) (*deploykit.User, error) {
+			if username != "example" {
+				return nil, deploykit.Errorf(deploykit.ENOTFOUND, "user not found")
+			}
+
 			return &deploykit.User{
 				ID:       100,
 				Name:     "User",
@@ -102,6 +106,10 @@ func (p *Program) Run(ctx context.Context) (err error) {
 			}, nil
 		},
 		FindByIdFunc: func(id int) (*deploykit.User, error) {
+			if id != 100 {
+				return nil, deploykit.Errorf(deploykit.ENOTFOUND, "user not found")
+			}
+
 			return &deploykit.User{
 				ID:       100,
 				Name:     "User",
