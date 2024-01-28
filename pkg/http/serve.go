@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"github.com/alexedwards/scs/sqlite3store"
+	"github.com/alexedwards/scs/v2"
 	"github.com/heyjorgedev/deploykit/pkg/core"
 	"net"
 	"net/http"
@@ -17,12 +19,17 @@ type ServeConfig struct {
 func Serve(app core.App, config ServeConfig) error {
 	app.Logger().Info("Starting HTTP server...")
 
-	router, err := newRouter(app)
+	sessionManager := scs.New()
+	sessionManager.Cookie.Name = "deploykit_session"
+	sqliteSessionStore := sqlite3store.NewWithCleanupInterval(app.DB(), 30*time.Minute)
+	sessionManager.Store = sqliteSessionStore
+
+	router, err := newRouter(app, sessionManager)
 	if err != nil {
 		return err
 	}
 
-	// base request context used for cancelling long running requests
+	// base request context used for cancelling long-running requests
 	// like the SSE connections
 	baseCtx, cancelBaseCtx := context.WithCancel(context.Background())
 	defer cancelBaseCtx()
@@ -41,6 +48,7 @@ func Serve(app core.App, config ServeConfig) error {
 	var wg sync.WaitGroup
 	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
 		app.Logger().Info("Stopping HTTP server...")
+		sqliteSessionStore.StopCleanup()
 		cancelBaseCtx()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -55,5 +63,6 @@ func Serve(app core.App, config ServeConfig) error {
 
 	defer wg.Wait()
 
-	return server.ListenAndServe()
+	_ = server.ListenAndServe()
+	return nil
 }

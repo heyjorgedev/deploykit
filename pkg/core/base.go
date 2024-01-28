@@ -3,7 +3,9 @@ package core
 import (
 	"database/sql"
 	docker "github.com/docker/docker/client"
+	"github.com/heyjorgedev/deploykit/pkg/sqlite"
 	"github.com/heyjorgedev/deploykit/pkg/tools/bus"
+	_ "github.com/mattn/go-sqlite3"
 	"log/slog"
 	"os"
 )
@@ -80,6 +82,18 @@ func (app *BaseApp) Bootstrap() error {
 }
 
 func (app *BaseApp) Shutdown() error {
+	if app.db != nil {
+		if err := app.db.Close(); err != nil {
+			return err
+		}
+	}
+
+	if app.dockerHost != nil {
+		if err := app.dockerHost.Close(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -88,7 +102,24 @@ func (app *BaseApp) initDockerConnection() (err error) {
 	return err
 }
 
-func (app *BaseApp) initDatabaseConnection() error {
+func (app *BaseApp) initDatabaseConnection() (err error) {
+	app.db, err = sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		return err
+	}
+
+	if err := sqlite.EnableWAL(app.db); err != nil {
+		return err
+	}
+
+	if err := sqlite.EnableForeignKeys(app.db); err != nil {
+		return err
+	}
+
+	if err := sqlite.Migrate(app.db); err != nil {
+		return err
+	}
+
 	return nil
 }
 
