@@ -1,11 +1,11 @@
-package http
+package web
 
 import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/benbjohnson/hashfs"
 	"github.com/go-chi/chi/v5"
 	"github.com/heyjorgedev/deploykit/pkg/core"
-	"github.com/heyjorgedev/deploykit/pkg/http/assets"
+	"github.com/heyjorgedev/deploykit/pkg/web/assets"
 	"net/http"
 )
 

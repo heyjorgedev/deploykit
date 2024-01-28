@@ -1,4 +1,4 @@
-package view
+package ui
 
 import (
 	g "github.com/maragudk/gomponents"

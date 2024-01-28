@@ -1,7 +1,7 @@
-package view
+package ui
 
 import (
-	"github.com/heyjorgedev/deploykit/http/assets"
+	"github.com/heyjorgedev/deploykit/pkg/web/assets"
 	g "github.com/maragudk/gomponents"
 	htmx "github.com/maragudk/gomponents-htmx"
 	. "github.com/maragudk/gomponents/html"
