@@ -23,7 +23,12 @@ type DeployKit struct {
 	RootCmd *cobra.Command
 }
 
-func NewWithConfig() *DeployKit {
+type Config struct {
+	IsDev   bool
+	DataDir string
+}
+
+func NewWithConfig(config Config) *DeployKit {
 	dk := &DeployKit{
 		RootCmd: &cobra.Command{
 			Use:     filepath.Base(os.Args[0]),
@@ -34,7 +39,8 @@ func NewWithConfig() *DeployKit {
 
 	dk.appWrapper = &appWrapper{
 		App: core.NewBaseApp(core.BaseAppConfig{
-			DataDir: "./dk-data",
+			DataDir: config.DataDir,
+			IsDev:   config.IsDev,
 		}),
 	}
 

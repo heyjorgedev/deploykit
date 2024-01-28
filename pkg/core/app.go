@@ -3,7 +3,7 @@ package core
 import (
 	"database/sql"
 	docker "github.com/docker/docker/client"
-	"github.com/heyjorgedev/deploykit/pkg/tools/bus"
+	"github.com/heyjorgedev/deploykit/pkg/core/hook"
 	"log/slog"
 )
 
@@ -30,5 +30,5 @@ type App interface {
 	// Events
 	// -----------------
 
-	OnTerminate() *bus.EventBag[*TerminateEvent]
+	OnTerminate() *hook.Hook[*TerminateEvent]
 }

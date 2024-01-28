@@ -3,11 +3,12 @@ package core
 import (
 	"database/sql"
 	docker "github.com/docker/docker/client"
+	"github.com/heyjorgedev/deploykit/pkg/core/hook"
 	"github.com/heyjorgedev/deploykit/pkg/sqlite"
-	"github.com/heyjorgedev/deploykit/pkg/tools/bus"
 	_ "github.com/mattn/go-sqlite3"
 	"log/slog"
 	"os"
+	"path"
 )
 
 var _ App = (*BaseApp)(nil)
@@ -20,7 +21,7 @@ type BaseApp struct {
 	dockerHost *docker.Client
 
 	// Events
-	terminateEvent *bus.EventBag[*TerminateEvent]
+	terminateEvent *hook.Hook[*TerminateEvent]
 }
 
 type BaseAppConfig struct {
@@ -38,7 +39,7 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 		dataDir: config.DataDir,
 
 		// Events
-		terminateEvent: &bus.EventBag[*TerminateEvent]{},
+		terminateEvent: &hook.Hook[*TerminateEvent]{},
 	}
 }
 
@@ -64,16 +65,12 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	// connect to the host server docker socket
 	if err := app.initDockerConnection(); err != nil {
 		return err
 	}
-
-	// todo: connect to the database
 	if err := app.initDatabaseConnection(); err != nil {
 		return err
 	}
-
 	if err := app.initLogger(); err != nil {
 		return err
 	}
@@ -103,7 +100,7 @@ func (app *BaseApp) initDockerConnection() (err error) {
 }
 
 func (app *BaseApp) initDatabaseConnection() (err error) {
-	app.db, err = sql.Open("sqlite3", ":memory:")
+	app.db, err = sql.Open("sqlite3", path.Join(app.DataDir(), "db.sqlite"))
 	if err != nil {
 		return err
 	}
@@ -128,6 +125,6 @@ func (app *BaseApp) initLogger() error {
 	return nil
 }
 
-func (app *BaseApp) OnTerminate() *bus.EventBag[*TerminateEvent] {
+func (app *BaseApp) OnTerminate() *hook.Hook[*TerminateEvent] {
 	return app.terminateEvent
 }

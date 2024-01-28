@@ -13,9 +13,12 @@ func newRouter(app core.App, session *scs.SessionManager) (chi.Router, error) {
 	r := chi.NewRouter()
 	r.Handle("/assets/*", http.StripPrefix("/assets/", hashfs.FileServer(assets.FS)))
 
+	// Web Routes
 	r.Route("/", func(r chi.Router) {
+		// Load session middleware
 		r.Use(session.LoadAndSave)
-		registerAuthRoutes(app, r)
+
+		registerAuthRoutes(app, r, session)
 	})
 
 	return r, nil
