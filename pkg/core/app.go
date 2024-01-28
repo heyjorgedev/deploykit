@@ -4,12 +4,15 @@ import (
 	"database/sql"
 	docker "github.com/docker/docker/client"
 	"github.com/heyjorgedev/deploykit/pkg/core/hook"
+	"github.com/heyjorgedev/deploykit/pkg/dao"
 	"log/slog"
 )
 
 type App interface {
 	// DB returns the database connection.
 	DB() *sql.DB
+
+	Dao() *dao.Dao
 
 	// HostDocker returns the docker connection of the same host.
 	HostDocker() *docker.Client

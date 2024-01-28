@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/heyjorgedev/deploykit/pkg/core"
@@ -32,5 +33,29 @@ func (h *authHandler) handleGetLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *authHandler) handlePostLogin(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("login"))
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	user, err := h.app.Dao().FindUserByUsername(username)
+	if err != nil {
+		ui.AuthLoginForm(ui.AuthLoginFormProps{
+			Username: username,
+			Error:    "Credentials are wrong",
+		}).Render(w)
+		return
+	}
+
+	if isValidPassword := user.ValidatePassword(password); !isValidPassword {
+		ui.AuthLoginForm(ui.AuthLoginFormProps{
+			Username: username,
+			Error:    "Credentials are wrong",
+		}).Render(w)
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf("Welcome %s", user.Name)))
 }

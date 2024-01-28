@@ -3,7 +3,9 @@ package core
 import (
 	"database/sql"
 	docker "github.com/docker/docker/client"
+	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/heyjorgedev/deploykit/pkg/core/hook"
+	"github.com/heyjorgedev/deploykit/pkg/dao"
 	"github.com/heyjorgedev/deploykit/pkg/sqlite"
 	_ "github.com/mattn/go-sqlite3"
 	"log/slog"
@@ -16,6 +18,7 @@ var _ App = (*BaseApp)(nil)
 type BaseApp struct {
 	// Internals
 	db         *sql.DB
+	dao        *dao.Dao
 	logger     *slog.Logger
 	dataDir    string
 	dockerHost *docker.Client
@@ -45,6 +48,10 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 
 func (app *BaseApp) DB() *sql.DB {
 	return app.db
+}
+
+func (app *BaseApp) Dao() *dao.Dao {
+	return app.dao
 }
 
 func (app *BaseApp) Logger() *slog.Logger {
@@ -85,6 +92,12 @@ func (app *BaseApp) Shutdown() error {
 		}
 	}
 
+	if app.dao != nil {
+		if err := app.dao.Close(); err != nil {
+			return err
+		}
+	}
+
 	if app.dockerHost != nil {
 		if err := app.dockerHost.Close(); err != nil {
 			return err
@@ -104,6 +117,7 @@ func (app *BaseApp) initDatabaseConnection() (err error) {
 	if err != nil {
 		return err
 	}
+	app.dao = dao.New(dbx.NewFromDB(app.db, "sqlite3"))
 
 	if err := sqlite.EnableWAL(app.db); err != nil {
 		return err
