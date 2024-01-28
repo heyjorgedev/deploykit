@@ -1,73 +1,78 @@
 package deploykit
 
 import (
-	"errors"
-	"fmt"
+	"github.com/heyjorgedev/deploykit/pkg/core"
+	"github.com/spf13/cobra"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
 )
 
-const (
-	ECONFLICT       = "conflict"
-	EINTERNAL       = "internal"
-	EINVALID        = "invalid"
-	ENOTFOUND       = "not_found"
-	ENOTIMPLEMENTED = "not_implemented"
-	EUNAUTHORIZED   = "unauthorized"
-)
+var Version = "dev"
 
-type Error struct {
-	Code    string
-	Message string
+var _ core.App = (*DeployKit)(nil)
+
+type appWrapper struct {
+	core.App
 }
 
-func (e *Error) Error() string {
-	return fmt.Sprintf("deploykit error: code=%s message=%s", e.Code, e.Message)
+type DeployKit struct {
+	*appWrapper
+
+	RootCmd *cobra.Command
 }
 
-func ErrorCode(err error) string {
-	var e *Error
-	switch {
-	case err == nil:
-		return ""
-	case errors.As(err, &e):
-		return e.Code
-	default:
-		return EINTERNAL
+func NewWithConfig() *DeployKit {
+	dk := &DeployKit{
+		RootCmd: &cobra.Command{
+			Use:     filepath.Base(os.Args[0]),
+			Short:   "DeployKit",
+			Version: Version,
+		},
 	}
-}
 
-func ErrorMessage(err error) string {
-	var e *Error
-	switch {
-	case err == nil:
-		return ""
-	case errors.As(err, &e):
-		return e.Message
-	default:
-		return "Internal error."
+	dk.appWrapper = &appWrapper{
+		App: core.NewBaseApp(core.BaseAppConfig{
+			DataDir: "./dk-data",
+		}),
 	}
+
+	dk.RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
+	return dk
 }
 
-func Errorf(code string, format string, args ...interface{}) *Error {
-	return &Error{
-		Code:    code,
-		Message: fmt.Sprintf(format, args...),
+func (dk *DeployKit) Start() error {
+	dk.RootCmd.AddCommand(newServeCommand(dk))
+	return dk.Execute()
+}
+
+func (dk *DeployKit) Execute() error {
+	if err := dk.Bootstrap(); err != nil {
+		return err
 	}
-}
 
-type DeploymentConfig struct {
-	App struct {
-		Name string `toml:"name"`
-	} `toml:"app"`
-}
+	exit := make(chan bool, 1)
 
-type NetworkRepository interface {
-	Create(name string)
-}
+	// listen for interrupt signal to gracefully shutdown the application
+	go func() {
+		sigch := make(chan os.Signal, 1)
+		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
+		<-sigch
 
-type NetworkService struct {
-	repo NetworkRepository
-}
+		exit <- true
+	}()
 
-func (s *NetworkService) Create(name string) {
-	s.repo.Create(name)
+	// execute the root command
+	go func() {
+		_ = dk.RootCmd.Execute()
+
+		exit <- true
+	}()
+
+	<-exit
+
+	return dk.OnTerminate().Trigger(&core.TerminateEvent{App: dk}, func(e *core.TerminateEvent) error {
+		return dk.Shutdown()
+	})
 }
