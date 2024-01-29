@@ -3,9 +3,11 @@ package web
 import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	"github.com/heyjorgedev/deploykit/pkg/core"
 	"github.com/heyjorgedev/deploykit/pkg/web/ui"
 	"net/http"
+	"time"
 )
 
 type authHandler struct {
@@ -20,7 +22,7 @@ func registerAuthRoutes(app core.App, r chi.Router, session *scs.SessionManager)
 	}
 
 	r.Get("/auth/login", h.handleGetLogin)
-	r.Post("/auth/login", h.handlePostLogin)
+	r.With(httprate.LimitByIP(30, 1*time.Minute)).Post("/auth/login", h.handlePostLogin)
 }
 
 func (h *authHandler) handleGetLogin(w http.ResponseWriter, r *http.Request) {
@@ -56,14 +58,16 @@ func (h *authHandler) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.session.RenewToken(r.Context())
+	if err := h.session.RenewToken(r.Context()); err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
 	h.session.Put(r.Context(), "userID", user.ID)
 
 	if isHTMXRequest(r) {
-		w.Header().Set("HX-Location", "/")
-		w.WriteHeader(http.StatusNoContent)
+		htmxRedirect(w, r, "/", http.StatusCreated)
 		return
 	}
-	
+
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
