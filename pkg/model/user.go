@@ -14,7 +14,7 @@ func (User) TableName() string {
 }
 
 func (u User) ValidatePassword(password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) != nil
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
 }
 
 func (u *User) SetPassword(password string) error {

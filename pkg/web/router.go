@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/benbjohnson/hashfs"
 	"github.com/go-chi/chi/v5"
@@ -31,7 +30,7 @@ func newRouter(app core.App, session *scs.SessionManager) (chi.Router, error) {
 				return
 			}
 
-			w.Write([]byte(fmt.Sprintf("Hello, %d!", id)))
+			http.Redirect(w, r, "/dashboard", http.StatusFound)
 		})
 
 		r.With(authMiddleware(session)).Get("/protected", func(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +38,7 @@ func newRouter(app core.App, session *scs.SessionManager) (chi.Router, error) {
 		})
 
 		registerAuthRoutes(app, r, session)
+		registerDashboardRoutes(app, r, session)
 	})
 
 	// TODO: API Routes

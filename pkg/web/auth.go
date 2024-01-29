@@ -21,8 +21,21 @@ func registerAuthRoutes(app core.App, r chi.Router, session *scs.SessionManager)
 		session: session,
 	}
 
-	r.Get("/auth/login", h.handleGetLogin)
-	r.With(httprate.LimitByIP(30, 1*time.Minute)).Post("/auth/login", h.handlePostLogin)
+	// Guest Routes
+	r.Group(func(r chi.Router) {
+		r.Use(guestMiddleware(session))
+
+		// Login
+		r.Get("/auth/login", h.handleGetLogin)
+		r.With(httprate.LimitByIP(30, 1*time.Minute)).Post("/auth/login", h.handlePostLogin)
+
+	})
+
+	// Authenticated Routes
+	r.Group(func(r chi.Router) {
+		r.Use(authMiddleware(session))
+		r.Post("/auth/logout", h.handlePostLogout)
+	})
 }
 
 func (h *authHandler) handleGetLogin(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +79,21 @@ func (h *authHandler) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 
 	if isHTMXRequest(r) {
 		htmxRedirect(w, r, "/", http.StatusCreated)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (h *authHandler) handlePostLogout(w http.ResponseWriter, r *http.Request) {
+	if err := h.session.RenewToken(r.Context()); err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	h.session.Remove(r.Context(), "userID")
+
+	if isHTMXRequest(r) {
+		htmxRedirect(w, r, "/", http.StatusAccepted)
 		return
 	}
 
