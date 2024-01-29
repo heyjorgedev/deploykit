@@ -7,6 +7,7 @@ import (
 	"github.com/heyjorgedev/deploykit/pkg/core/hook"
 	"github.com/heyjorgedev/deploykit/pkg/dao"
 	"github.com/heyjorgedev/deploykit/pkg/sqlite"
+	"github.com/lmittmann/tint"
 	_ "github.com/mattn/go-sqlite3"
 	"log/slog"
 	"os"
@@ -23,6 +24,7 @@ type BaseApp struct {
 	logger     *slog.Logger
 	dataDir    string
 	dockerHost *docker.Client
+	isDev      bool
 
 	// Events
 	terminateEvent *hook.Hook[*TerminateEvent]
@@ -41,6 +43,7 @@ type BaseAppConfig struct {
 func NewBaseApp(config BaseAppConfig) *BaseApp {
 	return &BaseApp{
 		dataDir: config.DataDir,
+		isDev:   config.IsDev,
 
 		// Events
 		terminateEvent: &hook.Hook[*TerminateEvent]{},
@@ -137,7 +140,9 @@ func (app *BaseApp) initDatabaseConnection() (err error) {
 }
 
 func (app *BaseApp) initLogger() error {
-	app.logger = slog.Default()
+	app.logger = slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+		AddSource: app.isDev,
+	}))
 	return nil
 }
 

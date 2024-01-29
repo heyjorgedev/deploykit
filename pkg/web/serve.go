@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/heyjorgedev/deploykit/pkg/core"
@@ -63,6 +64,11 @@ func Serve(app core.App, config ServeConfig) error {
 
 	defer wg.Wait()
 
-	_ = server.ListenAndServe()
+	// Run the server
+	err = server.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
 	return nil
 }

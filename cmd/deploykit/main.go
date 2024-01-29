@@ -18,6 +18,7 @@ func main() {
 
 	app := deploykit.NewWithConfig(deploykit.Config{
 		DataDir: dataDir,
+		IsDev:   true,
 	})
 
 	if err := app.Start(); err != nil {
