@@ -18,6 +18,7 @@ var _ App = (*BaseApp)(nil)
 type BaseApp struct {
 	// Internals
 	db         *sql.DB
+	dbx        *dbx.DB
 	dao        *dao.Dao
 	logger     *slog.Logger
 	dataDir    string
@@ -92,8 +93,8 @@ func (app *BaseApp) Shutdown() error {
 		}
 	}
 
-	if app.dao != nil {
-		if err := app.dao.Close(); err != nil {
+	if app.dbx != nil {
+		if err := app.dbx.Close(); err != nil {
 			return err
 		}
 	}
@@ -117,7 +118,8 @@ func (app *BaseApp) initDatabaseConnection() (err error) {
 	if err != nil {
 		return err
 	}
-	app.dao = dao.New(dbx.NewFromDB(app.db, "sqlite3"))
+	app.dbx = dbx.NewFromDB(app.db, "sqlite3")
+	app.dao = dao.New(app.dbx)
 
 	if err := sqlite.EnableWAL(app.db); err != nil {
 		return err

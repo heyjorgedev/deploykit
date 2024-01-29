@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/heyjorgedev/deploykit/pkg/core"
@@ -57,5 +56,14 @@ func (h *authHandler) handlePostLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("Welcome %s", user.Name)))
+	h.session.RenewToken(r.Context())
+	h.session.Put(r.Context(), "userID", user.ID)
+
+	if isHTMXRequest(r) {
+		w.Header().Set("HX-Location", "/")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

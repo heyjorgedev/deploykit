@@ -1,7 +1,9 @@
 package model
 
+import "golang.org/x/crypto/bcrypt"
+
 type User struct {
-	ID           int64  `db:"id" json:"id"`
+	ID           int    `db:"id" json:"id"`
 	Name         string `db:"name" json:"name"`
 	Username     string `db:"username" json:"username"`
 	PasswordHash string `db:"passwordHash" json:"-"`
@@ -12,6 +14,15 @@ func (User) TableName() string {
 }
 
 func (u User) ValidatePassword(password string) bool {
-	// TODO: Change
-	return password == u.PasswordHash
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) != nil
+}
+
+func (u *User) SetPassword(password string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	u.PasswordHash = string(hash)
+	return nil
 }
