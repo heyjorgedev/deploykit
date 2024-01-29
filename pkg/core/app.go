@@ -33,5 +33,7 @@ type App interface {
 	// Events
 	// -----------------
 
+	OnAfterBootstrap() *hook.Hook[*BootstrapEvent]
+
 	OnTerminate() *hook.Hook[*TerminateEvent]
 }

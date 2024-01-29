@@ -1,6 +1,7 @@
 package deploykit
 
 import (
+	"github.com/heyjorgedev/deploykit/pkg/caddy"
 	"github.com/heyjorgedev/deploykit/pkg/core"
 	"github.com/spf13/cobra"
 	"os"
@@ -54,6 +55,8 @@ func (dk *DeployKit) Start() error {
 }
 
 func (dk *DeployKit) Execute() error {
+	caddy.NewManager(dk)
+
 	if err := dk.Bootstrap(); err != nil {
 		return err
 	}

@@ -27,7 +27,8 @@ type BaseApp struct {
 	isDev      bool
 
 	// Events
-	terminateEvent *hook.Hook[*TerminateEvent]
+	afterBootstrapEvent *hook.Hook[*BootstrapEvent]
+	terminateEvent      *hook.Hook[*TerminateEvent]
 }
 
 type BaseAppConfig struct {
@@ -46,7 +47,8 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 		isDev:   config.IsDev,
 
 		// Events
-		terminateEvent: &hook.Hook[*TerminateEvent]{},
+		afterBootstrapEvent: &hook.Hook[*BootstrapEvent]{},
+		terminateEvent:      &hook.Hook[*TerminateEvent]{},
 	}
 }
 
@@ -86,7 +88,9 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	return nil
+	return app.OnAfterBootstrap().Trigger(&BootstrapEvent{App: app}, func(e *BootstrapEvent) error {
+		return nil
+	})
 }
 
 func (app *BaseApp) Shutdown() error {
@@ -144,6 +148,10 @@ func (app *BaseApp) initLogger() error {
 		AddSource: app.isDev,
 	}))
 	return nil
+}
+
+func (app *BaseApp) OnAfterBootstrap() *hook.Hook[*BootstrapEvent] {
+	return app.afterBootstrapEvent
 }
 
 func (app *BaseApp) OnTerminate() *hook.Hook[*TerminateEvent] {
