@@ -28,3 +28,12 @@ func (dao *Dao) FindUserById(id int) (*model.User, error) {
 
 	return user, nil
 }
+
+func (dao *Dao) FindUserByPassword(password string) (*model.User, error) {
+	user := &model.User{}
+	if err := dao.UserQuery().Where(dbx.HashExp{"password": password}).One(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
