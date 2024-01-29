@@ -13,8 +13,5 @@ CREATE TABLE users (
   passwordHash TEXT NOT NULL
 );
 
+INSERT INTO users (name, username, passwordHash) VALUES ('Admin', 'admin', '$2a$12$M2YjYX9G1JrZvuXBPvjVjOshAXsO.HWMqHCjC1iGuZc4RvkBHt4DW');
 
-CREATE TABLE storage_redis (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL
-);

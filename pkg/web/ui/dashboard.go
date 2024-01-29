@@ -21,11 +21,6 @@ func DashboardPage(p DashboardPageProps) g.Node {
 					htmx.Post("/auth/logout"),
 				},
 			}),
-			UIButton(UIButtonProps{
-				Content: g.Text("Go to Google"),
-				Href:    "https://google.com",
-				Class:   "justify-end",
-			}),
 		),
 	)
 }
