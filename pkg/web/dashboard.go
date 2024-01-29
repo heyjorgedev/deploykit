@@ -23,8 +23,11 @@ func registerDashboardRoutes(app core.App, r chi.Router, session *scs.SessionMan
 }
 
 func (h *dashboardHandler) handleGetDashboard(w http.ResponseWriter, r *http.Request) {
+	userID := h.session.GetInt(r.Context(), "userID")
+	user, _ := h.app.Dao().FindUserById(userID)
+
 	_ = ui.LayoutAuth(ui.LayoutAuthProps{
 		Title:   "Dashboard",
-		Content: ui.DashboardPage(),
+		Content: ui.DashboardPage(ui.DashboardPageProps{Name: user.Name}),
 	}).Render(w)
 }

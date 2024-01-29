@@ -6,9 +6,14 @@ import (
 	. "github.com/maragudk/gomponents/html"
 )
 
-func DashboardPage() g.Node {
+type DashboardPageProps struct {
+	Name string
+}
+
+func DashboardPage(p DashboardPageProps) g.Node {
 	return Div(
 		Div(g.Text("Dashboard")),
+		Div(g.Textf("Hello, %s!", p.Name)),
 		Div(
 			UIButton(UIButtonProps{
 				Content: g.Text("Logout"),
