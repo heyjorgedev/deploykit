@@ -18,13 +18,14 @@ var _ App = (*BaseApp)(nil)
 
 type BaseApp struct {
 	// Internals
-	db         *sql.DB
-	dbx        *dbx.DB
-	dao        *dao.Dao
-	logger     *slog.Logger
-	dataDir    string
-	dockerHost *docker.Client
-	isDev      bool
+	db             *sql.DB
+	dbx            *dbx.DB
+	dao            *dao.Dao
+	logger         *slog.Logger
+	dataDir        string
+	dockerHost     *docker.Client
+	isDev          bool
+	isBootstrapped bool
 
 	// Events
 	afterBootstrapEvent *hook.Hook[*BootstrapEvent]
@@ -72,6 +73,10 @@ func (app *BaseApp) HostDocker() *docker.Client {
 	return app.dockerHost
 }
 
+func (app *BaseApp) IsBootstrapped() bool {
+	return app.isBootstrapped
+}
+
 func (app *BaseApp) Bootstrap() error {
 	// ensure that data dir exist
 	if err := os.MkdirAll(app.DataDir(), os.ModePerm); err != nil {
@@ -89,6 +94,7 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	return app.OnAfterBootstrap().Trigger(&BootstrapEvent{App: app}, func(e *BootstrapEvent) error {
+		app.isBootstrapped = true
 		return nil
 	})
 }
@@ -112,6 +118,7 @@ func (app *BaseApp) Shutdown() error {
 		}
 	}
 
+	app.isBootstrapped = false
 	return nil
 }
 

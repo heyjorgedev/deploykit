@@ -23,6 +23,9 @@ type App interface {
 	// DataDir returns the data directory path.
 	DataDir() string
 
+	// IsBootstrapped returns true if the app has been bootstrapped already
+	IsBootstrapped() bool
+
 	// Bootstrap initializes the app, e.g. by opening a database connection.
 	Bootstrap() error
 

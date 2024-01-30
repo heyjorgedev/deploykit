@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -20,6 +21,8 @@ type appWrapper struct {
 
 type DeployKit struct {
 	*appWrapper
+
+	dataDirFlag string
 
 	RootCmd *cobra.Command
 }
@@ -35,17 +38,34 @@ func NewWithConfig(config Config) *DeployKit {
 			Use:     filepath.Base(os.Args[0]),
 			Short:   "DeployKit",
 			Version: Version,
+			CompletionOptions: cobra.CompletionOptions{
+				DisableDefaultCmd: true,
+			},
 		},
+	}
+
+	baseDir, isDev := inspectRuntime()
+	if config.DataDir == "" {
+		config.DataDir = filepath.Join(baseDir, "dk-data")
 	}
 
 	dk.appWrapper = &appWrapper{
 		App: core.NewBaseApp(core.BaseAppConfig{
 			DataDir: config.DataDir,
-			IsDev:   config.IsDev,
+			IsDev:   isDev,
 		}),
 	}
 
+	dk.RootCmd.PersistentFlags().StringVar(
+		&dk.dataDirFlag,
+		"dir",
+		config.DataDir,
+		"directory where DeployKit will store all data.",
+	)
+
 	dk.RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
+	_ = dk.RootCmd.ParseFlags(os.Args[1:])
+
 	return dk
 }
 
@@ -54,11 +74,18 @@ func (dk *DeployKit) Start() error {
 	return dk.Execute()
 }
 
-func (dk *DeployKit) Execute() error {
+func (dk *DeployKit) Bootstrap() error {
+	// Register Dependencies
 	caddy.NewManager(dk)
 
-	if err := dk.Bootstrap(); err != nil {
-		return err
+	return dk.appWrapper.Bootstrap()
+}
+
+func (dk *DeployKit) Execute() error {
+	if !dk.skipBootstrap() {
+		if err := dk.Bootstrap(); err != nil {
+			return err
+		}
 	}
 
 	exit := make(chan bool, 1)
@@ -84,4 +111,66 @@ func (dk *DeployKit) Execute() error {
 	return dk.OnTerminate().Trigger(&core.TerminateEvent{App: dk}, func(e *core.TerminateEvent) error {
 		return dk.Shutdown()
 	})
+}
+
+func (dk *DeployKit) skipBootstrap() bool {
+	flags := []string{
+		"-h",
+		"--help",
+		"-v",
+		"--version",
+	}
+
+	if dk.IsBootstrapped() {
+		return true // already bootstrapped
+	}
+
+	cmd, _, err := dk.RootCmd.Find(os.Args[1:])
+	if err != nil {
+		return true // unknown command
+	}
+	if ExistInSlice(cmd.Name(), []string{filepath.Base(os.Args[0])}) {
+		return true
+	}
+
+	for _, arg := range os.Args {
+		if !ExistInSlice(arg, flags) {
+			continue
+		}
+
+		// ensure that there is no user defined flag with the same name/shorthand
+		trimmed := strings.TrimLeft(arg, "-")
+		if len(trimmed) > 1 && cmd.Flags().Lookup(trimmed) == nil {
+			return true
+		}
+		if len(trimmed) == 1 && cmd.Flags().ShorthandLookup(trimmed) == nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ExistInSlice checks whether a comparable element exists in a slice of the same type.
+func ExistInSlice[T comparable](item T, list []T) bool {
+	for _, v := range list {
+		if v == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+func inspectRuntime() (baseDir string, withGoRun bool) {
+	if strings.HasPrefix(os.Args[0], os.TempDir()) {
+		// probably ran with go run
+		withGoRun = true
+		baseDir, _ = os.Getwd()
+	} else {
+		// probably ran with go build
+		withGoRun = false
+		baseDir = filepath.Dir(os.Args[0])
+	}
+	return
 }
