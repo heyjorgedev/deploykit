@@ -122,13 +122,15 @@ func (dk *DeployKit) skipBootstrap() bool {
 	}
 
 	if dk.IsBootstrapped() {
-		return true // already bootstrapped
+		return true
 	}
 
 	cmd, _, err := dk.RootCmd.Find(os.Args[1:])
 	if err != nil {
 		return true // unknown command
 	}
+
+	// skip if the command is the root command
 	if cmd == dk.RootCmd {
 		return true
 	}
