@@ -129,7 +129,7 @@ func (dk *DeployKit) skipBootstrap() bool {
 	if err != nil {
 		return true // unknown command
 	}
-	if ExistInSlice(cmd.Name(), []string{filepath.Base(os.Args[0])}) {
+	if cmd == dk.RootCmd {
 		return true
 	}
 
