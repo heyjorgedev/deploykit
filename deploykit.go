@@ -90,7 +90,7 @@ func (dk *DeployKit) Execute() error {
 
 	exit := make(chan bool, 1)
 
-	// listen for interrupt signal to gracefully shutdown the application
+	// listen for interrupt signal to gracefully shut down the application
 	go func() {
 		sigch := make(chan os.Signal, 1)
 		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
@@ -169,10 +169,10 @@ func inspectRuntime() (baseDir string, withGoRun bool) {
 		// probably ran with go run
 		withGoRun = true
 		baseDir, _ = os.Getwd()
-	} else {
-		// probably ran with go build
-		withGoRun = false
-		baseDir = filepath.Dir(os.Args[0])
+		return
 	}
+	// probably ran with go build
+	withGoRun = false
+	baseDir = filepath.Dir(os.Args[0])
 	return
 }

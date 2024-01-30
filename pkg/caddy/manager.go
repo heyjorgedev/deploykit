@@ -1,9 +1,13 @@
 package caddy
 
-import "github.com/heyjorgedev/deploykit/pkg/core"
+import (
+	"github.com/heyjorgedev/deploykit/pkg/core"
+	"sync"
+)
 
 type Manager struct {
 	app core.App
+	mux sync.RWMutex
 }
 
 func NewManager(app core.App) *Manager {
@@ -16,12 +20,8 @@ func NewManager(app core.App) *Manager {
 
 	app.OnTerminate().Add(func(event *core.TerminateEvent) error {
 		app.Logger().Info("Terminating Caddy Manager")
-		return m.Close()
+		return nil
 	})
 
 	return m
-}
-
-func (m *Manager) Close() error {
-	return nil
 }
