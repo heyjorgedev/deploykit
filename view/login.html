@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DeployKit | Login</title>
+    {{template "head_includes"}}
+</head>
+<body>
+    <main class="p-6">
+        {{block "login_form" .}}
+        <form action="/login" method="post" hx-post="/login" hx-target="this" hx-swap="outerHTML">
+            <div class="grid">
+                <label for="email">Email</label>
+                <input class="border" type="email" id="email" name="email">
+            </div>
+            <div class="grid">
+                <label for="password">Password</label>
+                <input class="border" type="password" id="password" name="password">
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        {{end}}
+    </main>
+</body>
+</html>
+

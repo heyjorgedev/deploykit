@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DeployKit | Teams</title>
+    {{template "head_includes"}}
+</head>
+<body class="bg-gray-50">
+    <header class="pt-2 px-6 bg-white border-b">
+        <div class="py-4">{{.SelectedTeam.Name}}</div>
+        <nav>
+            <ul class="flex overflow-x-scroll px-6 -mx-6">
+                <li><a class="block py-3 px-4 border-b-2 border-black" href="/projects">Overview</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/monitoring">Monitoring</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/storage">Storage</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/storage">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="pt-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-2xl pb-2">Teams</h1>
+            <div class="p-6 border bg-white rounded-xl">
+                <ul id="team-list-ul" class="grid gap-2">
+                    {{range .Teams}}
+                    {{block "team_list_item" .}}
+                    <li class="border rounded-lg p-2">
+                        <a href="/teams/{{.ID}}">{{.Name}}</a>
+                    </li>
+                    {{end}}
+                    {{end}}
+                </ul>
+            </div>
+            <div class="border rounded-xl p-6 bg-white mt-6">
+                <form class="grid gap-4" action="/teams" method="post" hx-post="/teams" hx-target="#team-list-ul" hx-swap="beforeend" hx-on::after-request="this.reset()">
+                    <div class="grid">
+                        <label for="name">Name</label>
+                        <input class="border p-1 rounded-lg" type="text" id="name" name="name">
+                    </div>
+                    <button class="border rounded-lg py-2 px-4 hover:bg-gray-50" type="submit">Create Team</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
