@@ -21,6 +21,6 @@ func (s *Server) registerAuthRoutes(r chi.Router) {
 			return
 		}
 
-		s.redirectTemporary(w, r, "/login")
+		http.Redirect(w, r, "/teams", http.StatusSeeOther)
 	})
 }

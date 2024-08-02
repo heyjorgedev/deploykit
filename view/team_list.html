@@ -3,16 +3,24 @@
 <head>
     <title>DeployKit | Teams</title>
     {{template "head_includes"}}
+    <script>
+        document.addEventListener('team-created', function(event) {
+            event.target.reset();
+            alert(event.detail.value);
+        });
+    </script>
 </head>
 <body class="bg-gray-50">
     <header class="pt-2 px-6 bg-white border-b">
+        {{if .SelectedTeam}}
         <div class="py-4">{{.SelectedTeam.Name}}</div>
+        {{end}}
         <nav>
             <ul class="flex overflow-x-scroll px-6 -mx-6">
-                <li><a class="block py-3 px-4 border-b-2 border-black" href="/projects">Overview</a></li>
-                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/monitoring">Monitoring</a></li>
-                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/storage">Storage</a></li>
-                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/storage">Settings</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-black" href="/teams">Overview</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/teams">Monitoring</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/teams">Storage</a></li>
+                <li><a class="block py-3 px-4 border-b-2 border-transparent hover:border-black opacity-65 hover:opacity-100" href="/teams">Settings</a></li>
             </ul>
         </nav>
     </header>
@@ -31,7 +39,7 @@
                 </ul>
             </div>
             <div class="border rounded-xl p-6 bg-white mt-6">
-                <form class="grid gap-4" action="/teams" method="post" hx-post="/teams" hx-target="#team-list-ul" hx-swap="beforeend" hx-on::after-request="this.reset()">
+                <form id="team-create-form" class="grid gap-4" action="/teams" method="post" hx-post="/teams" hx-target="#team-list-ul" hx-swap="beforeend">
                     <div class="grid">
                         <label for="name">Name</label>
                         <input class="border p-1 rounded-lg" type="text" id="name" name="name">
@@ -42,3 +50,4 @@
         </div>
     </main>
 </body>
+</html>

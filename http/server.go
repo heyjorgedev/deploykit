@@ -70,7 +70,3 @@ func (s *Server) Close() error {
 	defer cancel()
 	return s.server.Shutdown(ctx)
 }
-
-func (s *Server) redirectTemporary(w http.ResponseWriter, r *http.Request, path string) {
-	http.Redirect(w, r, path, http.StatusTemporaryRedirect)
-}
