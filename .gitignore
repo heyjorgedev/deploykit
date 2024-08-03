@@ -10,3 +10,6 @@ tmp/
 # sqlite
 db.sqlite
 db.sqlite*
+
+# playground
+cmd/playground/

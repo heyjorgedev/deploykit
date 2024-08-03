@@ -50,6 +50,7 @@ func NewServer() *Server {
 	// Register authenticated routes
 	r.Group(func(r chi.Router) {
 		srv.registerTeamRoutes(r)
+		srv.registerProjectRoutes(r)
 	})
 
 	return srv
